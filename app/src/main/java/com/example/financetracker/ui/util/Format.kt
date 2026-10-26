@@ -2,6 +2,7 @@ package com.example.financetracker.ui.util
 
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Currency
 import java.util.Locale
@@ -25,6 +26,12 @@ private val dateFormatter = DateTimeFormatter.ofPattern("d. M. yyyy", CzechLocal
 
 /** 2026-10-26 → "26. 10. 2026" */
 fun formatDate(date: LocalDate): String = date.format(dateFormatter)
+
+private val monthFormatter = DateTimeFormatter.ofPattern("LLLL yyyy", CzechLocale)
+
+/** 2026-10 → "Říjen 2026" */
+fun formatMonth(month: YearMonth): String =
+    month.format(monthFormatter).replaceFirstChar { it.titlecase(CzechLocale) }
 
 /** "1 234,50" / "1234.5" → 1234.5, neplatný vstup → null. */
 fun parseAmount(text: String): Double? =

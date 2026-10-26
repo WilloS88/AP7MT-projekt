@@ -4,10 +4,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import com.example.financetracker.data.db.AppDatabase
+import com.example.financetracker.data.remote.ApiClient
 import com.example.financetracker.data.repository.CategoryRepository
 import com.example.financetracker.data.repository.ExchangeRateRepository
 import com.example.financetracker.data.repository.ExpenseRepository
-import com.example.financetracker.data.repository.FakeExchangeRateRepository
+import com.example.financetracker.data.repository.NetworkExchangeRateRepository
+import com.example.financetracker.data.repository.SharedPreferencesRateCache
 
 /**
  * Jednoduché ruční DI – jedna instance na celou aplikaci (vytváří ji [VydajnikApplication]).
@@ -23,8 +25,10 @@ class AppContainer(context: Context) {
     val expenseRepository = ExpenseRepository(database.expenseDao())
     val categoryRepository = CategoryRepository(database)
 
-    // TODO: nahradit skutečnou implementací přes REST API
-    val exchangeRateRepository: ExchangeRateRepository = FakeExchangeRateRepository()
+    val exchangeRateRepository: ExchangeRateRepository = NetworkExchangeRateRepository(
+        api = ApiClient.exchangeRateApi,
+        cache = SharedPreferencesRateCache(context),
+    )
 }
 
 /** Zkratka pro `viewModel { … }` – zpřístupní [AppContainer] uvnitř inicializátoru. */
