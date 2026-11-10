@@ -2,9 +2,7 @@ package com.example.financetracker.feature.expense
 
 import androidx.compose.runtime.Composable
 import com.example.financetracker.ui.navigation.AddExpensePrefill
-import com.example.financetracker.ui.navigation.PlaceholderScreen
 
-// Dočasná obrazovka. Nahradit obsah funkce skutečnou obrazovkou, parametry ponechat.
 // Route: add?currency=&amount=&note=&date=&source=
 // [prefill] = předvyplněné hodnoty (např. ze skenu QR Platby).
 @Composable
@@ -14,10 +12,11 @@ fun AddExpenseScreen(
     onScan: () -> Unit,
     onSaved: () -> Unit,
 ) {
-    PlaceholderScreen(
+    ExpenseForm(
         title = "Nový výdaj",
-        note = "Předvyplněno: $prefill",
+        viewModel = expenseFormViewModel(editId = null, prefill = prefill),
         onBack = onBack,
-        actions = listOf("Skenovat" to onScan, "Uložit" to onSaved),
+        onSaved = onSaved,
+        onScan = onScan,
     )
 }

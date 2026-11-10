@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -25,6 +26,7 @@ import com.example.financetracker.feature.expense.ExpenseDetailScreen
 import com.example.financetracker.feature.expenselist.ExpenseListScreen
 import com.example.financetracker.feature.importer.ImportPickScreen
 import com.example.financetracker.feature.importer.ImportPreviewScreen
+import com.example.financetracker.feature.importer.importViewModel
 import com.example.financetracker.feature.scan.ScanScreen
 import com.example.financetracker.feature.settings.SettingsScreen
 import com.example.financetracker.feature.stats.StatsScreen
@@ -166,22 +168,23 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             )
         }
 
-        // ---- Import – vnořený graf.
-        // Sdílený ViewModel pro pick + preview:
-        //   val parent = remember(entry) { navController.getBackStackEntry(Routes.IMPORT_GRAPH) }
-        //   val vm: ImportViewModel = viewModel(parent) { ImportViewModel(appContainer.expenseRepository) }
-        // a předat `vm` oběma obrazovkám jako parametr.
+        // ---- Import – vnořený graf. Výběr souboru i náhled sdílí jeden ViewModel navázaný na graf,
+        // jinak by náhled po načtení souboru byl prázdný.
         navigation(startDestination = Routes.IMPORT_PICK, route = Routes.IMPORT_GRAPH) {
-            composable(Routes.IMPORT_PICK) {
+            composable(Routes.IMPORT_PICK) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry(Routes.IMPORT_GRAPH) }
                 ImportPickScreen(
                     onBack = back,
                     onParsed = { navController.navigate(Routes.IMPORT_PREVIEW) },
+                    viewModel = importViewModel(parent),
                 )
             }
-            composable(Routes.IMPORT_PREVIEW) {
+            composable(Routes.IMPORT_PREVIEW) { entry ->
+                val parent = remember(entry) { navController.getBackStackEntry(Routes.IMPORT_GRAPH) }
                 ImportPreviewScreen(
                     onBack = back,
                     onImported = { navController.popBackStack(Routes.IMPORT_GRAPH, inclusive = true) },
+                    viewModel = importViewModel(parent),
                 )
             }
         }
