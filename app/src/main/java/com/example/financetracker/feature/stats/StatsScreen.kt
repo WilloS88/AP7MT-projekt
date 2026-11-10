@@ -24,6 +24,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,10 +32,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.financetracker.appContainer
+import com.example.financetracker.data.model.Category
+import com.example.financetracker.data.model.Expense
 import com.example.financetracker.ui.components.EmptyState
+import com.example.financetracker.ui.components.ExpenseRow
 import com.example.financetracker.ui.components.VydajnikTopBar
 import com.example.financetracker.ui.theme.AppShapes
 import com.example.financetracker.ui.theme.Dimens
+import com.example.financetracker.ui.theme.ListDensity
+import com.example.financetracker.ui.theme.LocalListDensity
 import com.example.financetracker.ui.theme.Spacing
 
 // Route: stats (záložka)
@@ -52,7 +58,7 @@ fun StatsScreen() {
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = Spacing.ScreenMargin),
+                .padding(start = Spacing.ScreenMargin, end = Spacing.ScreenMargin, bottom = Spacing.l),
             verticalArrangement = Arrangement.spacedBy(Spacing.l),
         ) {
             PeriodSwitcher(
@@ -64,7 +70,7 @@ fun StatsScreen() {
             if (current.spending.isEmpty()) {
                 EmptyState(
                     title = "Žádné výdaje",
-                    message = "V tomto období zatím nemáte žádné výdaje.",
+                    message = current.period.type.emptyMessage,
                     icon = Icons.Outlined.PieChart,
                     modifier = Modifier.padding(top = Spacing.xxl),
                 )
@@ -72,7 +78,6 @@ fun StatsScreen() {
                 Card(
                     shape = AppShapes.Card,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                    modifier = Modifier.padding(bottom = Spacing.l),
                 ) {
                     Column(
                         modifier = Modifier
@@ -90,12 +95,51 @@ fun StatsScreen() {
                         CategoryLegend(spending = current.spending, modifier = Modifier.fillMaxWidth())
                     }
                 }
+                if (current.period.type.showsExpenses && current.expenses.isNotEmpty()) {
+                    PeriodExpenses(
+                        expenses = current.expenses,
+                        categories = current.categoriesById,
+                        showDate = current.period.type != PeriodType.Day,
+                    )
+                }
             }
         }
     }
 }
 
-/** Volba měsíc / rok a listování mezi obdobími. */
+/** Výdaje zvoleného dne nebo týdne, nejnovější nahoře. Kompaktní řádky. */
+@Composable
+private fun PeriodExpenses(
+    expenses: List<Expense>,
+    categories: Map<Long, Category>,
+    showDate: Boolean,
+) {
+    Card(
+        shape = AppShapes.Card,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+    ) {
+        Column(Modifier.padding(vertical = Dimens.HeroPaddingVertical)) {
+            Text(
+                text = "Výdaje (${expenses.size})",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(horizontal = Dimens.HeroPaddingHorizontal)
+                    .padding(bottom = Spacing.s),
+            )
+            CompositionLocalProvider(LocalListDensity provides ListDensity.Compact) {
+                expenses.forEach { expense ->
+                    ExpenseRow(
+                        expense = expense,
+                        category = categories[expense.categoryId],
+                        showDate = showDate,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Volba den / týden / měsíc / rok a listování mezi obdobími. */
 @Composable
 private fun PeriodSwitcher(
     period: Period,
@@ -114,7 +158,9 @@ private fun PeriodSwitcher(
                     selected = period.type == type,
                     onClick = { onTypeChange(type) },
                     shape = SegmentedButtonDefaults.itemShape(index = index, count = PeriodType.entries.size),
-                    label = { Text(type.label) },
+                    // Bez fajfky – čtyři tlačítka by se na šířku telefonu nevešla, vybrané ukazuje barva
+                    icon = {},
+                    label = { Text(type.label, maxLines = 1) },
                 )
             }
         }

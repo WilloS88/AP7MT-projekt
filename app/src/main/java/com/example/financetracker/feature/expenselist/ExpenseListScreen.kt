@@ -40,8 +40,8 @@ import com.example.financetracker.ui.theme.Spacing
 import com.example.financetracker.ui.theme.tabular
 import com.example.financetracker.ui.util.CzechLocale
 import com.example.financetracker.ui.util.formatCzk
+import com.example.financetracker.ui.util.formatDay
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 // Route: expenses (záložka)
 @Composable
@@ -139,7 +139,7 @@ private fun ExpenseDayList(
         ) {
             days.forEach { day ->
                 stickyHeader(key = "day-${day.date}") {
-                    DayHeader(label = dayLabel(day.date, today), total = day.total)
+                    DayHeader(label = formatDay(day.date, today), total = day.total)
                 }
                 items(day.expenses, key = { it.id }) { expense ->
                     ExpenseRow(
@@ -175,14 +175,4 @@ private fun DayHeader(label: String, total: Double) {
         )
         Text(formatCzk(total), style = style.tabular(), fontWeight = FontWeight.SemiBold, color = scheme.onSurfaceVariant)
     }
-}
-
-private val weekdayFormatter = DateTimeFormatter.ofPattern("EEEE d. M.", CzechLocale)
-private val weekdayYearFormatter = DateTimeFormatter.ofPattern("EEEE d. M. yyyy", CzechLocale)
-
-/** "Dnes", "Včera", "pondělí 19. 10.", u jiného roku i s rokem. */
-private fun dayLabel(date: LocalDate, today: LocalDate): String = when (date) {
-    today -> "Dnes"
-    today.minusDays(1) -> "Včera"
-    else -> date.format(if (date.year == today.year) weekdayFormatter else weekdayYearFormatter)
 }
